@@ -1,9 +1,140 @@
-﻿namespace caZsChessBot.Engine {
-    public class Board {
-        private int[] gameboard = new int[64];
-        
-        public Board() {
+﻿using System.Drawing;
 
+namespace caZsChessBot.Engine {
+    /// <summary>
+    /// This Class holds the internal representation of the chess board.
+    /// </summary>
+    public class Board {
+        // Game board
+        private int[] gameboard;
+
+        // Gamestate stuff.
+        public GameState CurrentGameState;
+        public bool WhiteToMove { get; private set; }
+
+        public Board() {
+            gameboard = new int[64];
         }
+
+        /// <summary>
+        /// Get the piece at the location on the board.
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns>Integer representing the piece on the board.</returns>
+        /// <exception cref="InvalidDataException">Throws if location is not within the board.</exception>
+        public int GetPiece(int location) {
+            if (location >= 0 && location < 64) {
+                return gameboard[location];
+            } else {
+                throw new InvalidDataException();
+            }
+        }
+        /// <summary>
+        /// Sets a piece in a specific location on the board.
+        /// </summary>
+        /// <param name="location">The location on the board.</param>
+        /// <param name="piece">The piece to set.</param>
+        /// <exception cref="InvalidDataException">Throws if location is not within the board.</exception>
+        public void SetPiece(int location, int piece) {
+            if (location >= 0 && location < 64) {
+                gameboard[location] = piece;
+            } else {
+                throw new InvalidDataException();
+            }
+        }
+
+        public void SetGameStateFromFen(bool whiteToMove, bool whiteKingCastleRight, bool whiteQueenCastleRight,
+            bool blackKingCastleRight, bool blackQueenCastleRight, int enPassantTargetSquare, int halfMoveCounter, int fullMoveCounter) {
+            WhiteToMove = whiteToMove;
+            int castleRights =
+                (whiteKingCastleRight ? GameState.WhiteKingsideFlag : 0) |
+                (whiteQueenCastleRight ? GameState.WhiteQueensideFlag : 0) |
+                (blackKingCastleRight ? GameState.BlackKingsideFlag : 0) |
+                (blackQueenCastleRight ? GameState.BlackQueensideFlag : 0);
+
+            CurrentGameState = new GameState(enPassantTargetSquare, castleRights, halfMoveCounter);
+        }
+
+        // Static helpers.
+        /// <summary>
+        /// Gets the name of a square from an integer.
+        /// </summary>
+        /// <param name="coord">The location on the board.</param>
+        /// <returns>A <see cref="string"/> representing a board square.</returns>
+        public static string GetSquareNameFromCoord(int coord) {
+            string coordName = "";
+            // Get the file name
+            switch (coord % 8) {
+                case 0:
+                    coordName = "a";
+                    break;
+                case 1:
+                    coordName = "b";
+                    break;
+                case 2:
+                    coordName = "c";
+                    break;
+                case 3:
+                    coordName = "d";
+                    break;
+                case 4:
+                    coordName = "e";
+                    break;
+                case 5:
+                    coordName = "f";
+                    break;
+                case 6:
+                    coordName = "g";
+                    break;
+                case 7:
+                    coordName = "h";
+                    break;
+                default:
+                    break;
+            }
+
+            // Get rank name
+            coordName = coordName + ((coord / 8) + 1);
+            return coordName;
+        }
+        /// <summary>
+        /// Gets the coord of a square on the board by its name.
+        /// </summary>
+        /// <param name="name">The name (algebraic notation) of the coordinate.</param>
+        /// <returns>An <see cref="int"/> representing the coordinate on the board.</returns>
+        public static int GetSquareCoordFromName(string name) {
+            int coord = 0;
+            switch (name[0]) {
+                case 'a':
+                    coord = 0;
+                    break;
+                case 'b':
+                    coord = 1;
+                    break;
+                case 'c':
+                    coord = 2;
+                    break;
+                case 'd':
+                    coord = 3;
+                    break;
+                case 'e':
+                    coord = 4;
+                    break;
+                case 'f':
+                    coord = 5;
+                    break;
+                case 'g':
+                    coord = 6;
+                    break;
+                case 'h':
+                    coord = 7;
+                    break;
+                default:
+                    break;
+            }
+            return coord + (int.Parse("" + name[1]) - 1) * 8;
+        }
+
+        
     }
 }

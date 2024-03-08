@@ -1,22 +1,50 @@
 ﻿namespace caZsChessBot.Engine {
+    /// <summary>
+    /// Container class that manages the game, the AI, and the board.
+    /// </summary>
     public class EngineMain {
-        public EngineMain() {
+        private Board board;
+        private Bot ai;
 
+        public EngineMain() {
+            board = new Board();
+            ai = new Bot();
         }
-        /* Initialize the engine. */
+
+        /// <summary>
+        /// Initialize the engine. 
+        /// </summary>
         public void InitEngine() {
 
         }
 
-        /* Setup the gamestate for a new game. */
+        /// <summary>
+        /// Setup the gamestate for a new game.
+        /// </summary>
         public void CreateNewGame() {
 
         }
 
-        /* Setup the position from a FEN. */
-        public void SetupPosition(string fenString) {
-
+        /// <summary>
+        /// Setup the position from a FEN.
+        /// </summary>
+        /// <param name="fenString">The FEN to setup</param>
+        public void SetupPosition(string fenString = FenUtils.startPosFen) {
+            FenUtils.SetupBoardFromFen(board, fenString);
         }
-        
+
+        // Debug.
+        public void PrintDiagram() {
+            BoardUtils.PrintDiagram(board);
+        }
+
+        public void PrintMoves() {
+            BoardUtils.PrintMoves(board);
+        }
+
+        public void EnterTester() {
+            TestUtils.Test(board);
+        }
+
     }
 }

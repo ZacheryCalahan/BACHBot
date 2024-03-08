@@ -47,12 +47,16 @@ public class EngineUCI {
                 break;
 
             case "d":
-                // TODO Create Bot's diagram of the board.
+                engine.PrintDiagram();
                 break;
 
             case "test":
                 // This just runs the Test() method from the Utility package.
-                TestUtils.Test();
+                engine.EnterTester();                
+                break;
+
+            case "printmoves":
+                engine.PrintMoves();
                 break;
 
             default:
@@ -73,10 +77,9 @@ public class EngineUCI {
     /// <param name="message">UCI Command</param>
     private void ProcessPositionCommand(string message) {
         if (message.ToLower().Contains("startpos")) {
-            engine.SetupPosition(FenUtil.startPosFen);
+            engine.SetupPosition();
         } else if (message.ToLower().Contains("fen")) {
-            string customFen = ""; // TODO
-            engine.SetupPosition(customFen);
+            engine.SetupPosition(GetFullFen(message));
         }
     }
     /// <summary>
@@ -85,6 +88,18 @@ public class EngineUCI {
     /// <param name="message"></param>
     private void ProcessGoCommand(string message) {
 
+    }
+
+    private string GetFullFen(string message) {
+        // Kinda dirty, but effective.
+        string[] messageTokens = message.Split(" ");
+        string fen = messageTokens[2]; // fen position
+        fen += " " + messageTokens[3] + " " +
+            messageTokens[4] + " " +
+            messageTokens[5] + " " +
+            messageTokens[6] + " " +
+            messageTokens[7];
+        return fen;
     }
 }
 
