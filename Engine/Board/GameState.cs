@@ -3,6 +3,9 @@
     /// Structure holding the state of a game.
     /// </summary>
     public readonly struct GameState {
+        /// <summary>
+        /// Location of the latest double pushed pawn. Set to -1 if no pawn was double pushed.
+        /// </summary>
         public readonly int enPassantSquare;
         public readonly int castlingRights;
         public readonly int fiftyMoveCounter;
@@ -15,7 +18,7 @@
         public const int ClearWhiteKingsideMask = 0b1110;
         public const int ClearWhiteQueensideMask = 0b1101;
         public const int ClearBlackKingsideMask = 0b1011;
-        public const int ClearBlacksideQueensideMask = 0b0111;
+        public const int ClearBlackQueensideMask = 0b0111;
 
         public GameState(int enPassantSquare, int castlingRights, int fiftyMoveCounter) {
             this.enPassantSquare = enPassantSquare;

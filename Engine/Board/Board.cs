@@ -16,6 +16,71 @@ namespace caZsChessBot.Engine {
             gameboard = new int[64];
         }
 
+        public void MakeMove(Move move) {
+            // Useful values
+            int pieceMoved = gameboard[move.StartSquare];
+            int location = move.StartSquare;
+            int colorMoved = Piece.GetPieceColor(pieceMoved);
+
+            // Set En Passant Square to where a pawn moved to if move was double push pawn.
+            int newEnPassantSquare = (move.MoveFlag == Move.PawnDoublePush) ? move.TargetSquare : -1;
+
+            int newCastlingRights = CurrentGameState.castlingRights;
+            // Calculate castle rights.
+            if (pieceMoved == Piece.King) {
+                if (colorMoved == Piece.White) {
+                    newCastlingRights &= GameState.ClearWhiteKingsideMask;
+                    newCastlingRights &= GameState.ClearWhiteQueensideMask;
+                } else {
+                    newCastlingRights &= GameState.ClearBlackKingsideMask;
+                    newCastlingRights &= GameState.ClearBlackQueensideMask;
+                }
+            } else if (pieceMoved == Piece.Rook) {
+                if (colorMoved == Piece.White) {
+                    if (location == 0) {
+                        newCastlingRights &= GameState.ClearWhiteQueensideMask;
+                    } else if (location == 7) {
+                        newCastlingRights &= GameState.ClearWhiteKingsideMask;
+                    }
+                } else {
+                    if (location == 56) {
+                        newCastlingRights &= GameState.ClearBlackQueensideMask;
+                    } else if (location == 63) {
+                        newCastlingRights &= GameState.ClearBlackKingsideMask;
+                    }
+                }
+            }
+
+            // Calculate 50 move counter.
+            int newFiftyMoveCounter;
+            if (Piece.GetPieceType(pieceMoved) == Piece.Pawn || move.IsPieceCaptured) {
+                newFiftyMoveCounter = 1;
+            } else {
+                newFiftyMoveCounter = CurrentGameState.fiftyMoveCounter + 1;
+            }
+
+            // Move pieces
+            if (move.IsEnpassantCapture) {
+                gameboard[CurrentGameState.enPassantSquare] = 0; // Remove enpassant pawn                
+            }
+
+            // Handle Castle here. TODO
+
+            // Commit the move
+            gameboard[move.TargetSquare] = gameboard[move.StartSquare];
+            gameboard[move.StartSquare] = 0;
+
+            // also, if enpassant capture flag move, remove the pawn @ gamestate.enpassantsquare.
+            // Make the move
+
+
+            CurrentGameState = new GameState(newEnPassantSquare, newCastlingRights, newFiftyMoveCounter);
+        }
+
+        public void UnMakeMove(Move move) {
+
+        }
+
         /// <summary>
         /// Get the piece at the location on the board.
         /// </summary>

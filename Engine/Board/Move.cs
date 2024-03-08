@@ -13,12 +13,14 @@
         public const int PromoteToKnightFlag = 6;
         public const int PromoteToBishopFlag = 7;
 
-        public const int PieceCapturedFlag = 8;
+        // this is a true bitflag, so one can capture and promote at one time.
+        public const int PieceCapturedFlag = 8; 
 
         // Masks
         const ushort startSquareMask = 0b0000000000111111;
         const ushort targetSquareMask = 0b0000111111000000;
         const ushort flagMask = 0b1111000000000000;
+        const ushort clearCaptureMask = 0b0111111111111111;
 
         public Move(ushort moveValue) {
             this.moveValue = moveValue;
@@ -36,9 +38,10 @@
         public bool IsNull => moveValue == 0;
         public int StartSquare => moveValue & startSquareMask;
         public int TargetSquare => (moveValue & targetSquareMask) >> 6;
-        public bool IsPromotion => MoveFlag >= PromoteToQueenFlag;
-        public int MoveFlag => moveValue >> 12;
-        public bool IsPieceCaptured => MoveFlag == PieceCapturedFlag;
+        public bool IsPromotion => (MoveFlag & clearCaptureMask) >= PromoteToQueenFlag;
+        public int MoveFlag => (moveValue >> 12) & clearCaptureMask;
+        public bool IsPieceCaptured => (MoveFlag & 0x8000) == 0x8000; // check top bit.
+        public bool IsEnpassantCapture => (MoveFlag & 0x8000) == EnPassantCaptureFlag;
 
         public int PromotionPieceType {
             get {
