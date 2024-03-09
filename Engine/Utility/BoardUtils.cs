@@ -37,6 +37,9 @@
                     case Move.PromoteToQueenFlag: 
                         promotion = "q";
                         break;
+                    case Move.CastleFlag: // yeah i know, doesn't really fit the names, give me a break and I'll fix it.
+                        promotion = "castle";
+                        break;
                     default:
                         promotion = "";
                         break;

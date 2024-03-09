@@ -4,7 +4,7 @@ public static class TestUtils {
     
     public static void Test(Board board) {
         string message = "";
-        Console.WriteLine("TEST MENU\nAvailable commands:\n\tgetpiece {0-63}");
+        Console.WriteLine("TEST MENU\nAvailable commands:\n\tgetpiece {0-63}\n\tmovepiece startsquare targetsquare {0-63}");
 
         while (message != "exit") {
             message = Console.ReadLine();
@@ -15,10 +15,24 @@ public static class TestUtils {
                 case "getpiece":
                     GetPieceOnBoard(board, messageTokens[1]); 
                     break;
+                case "movepiece":
+                    MovePieceCastle(board, messageTokens[1], messageTokens[2]);
+                    break;
                 default:
                     Console.WriteLine("Invalid command: " + messageTokens[0]);
                     break;
             }
+        }
+    }
+    private static void MovePieceCastle(Board board, string startSquare, string targetSquare) {
+        int startSquareInt, targetSquareInt;
+        bool parsed = int.TryParse(startSquare, out startSquareInt);
+        parsed &= int.TryParse(targetSquare, out targetSquareInt);
+        if (!parsed && startSquareInt !>= 0 && startSquareInt !< 64 && targetSquareInt !>= 0 && targetSquareInt !< 64) {
+            Console.WriteLine("Invalid number. {0-63}");
+        } else {
+            board.MakeMove(new Move(startSquareInt, targetSquareInt, Move.CastleFlag));
+            Console.WriteLine("Sucessfully made move.");
         }
     }
 

@@ -61,14 +61,48 @@ namespace caZsChessBot.Engine {
 
             // Move pieces
             if (move.IsEnpassantCapture) {
-                gameboard[CurrentGameState.enPassantSquare] = 0; // Remove enpassant pawn                
+                gameboard[CurrentGameState.enPassantSquare] = 0; // Remove enpassant pawn
+
+                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
+                gameboard[move.StartSquare] = 0;
+            } else if (move.MoveFlag == Move.CastleFlag) {
+                int rookOffset = 0;
+                int rookLocation = 0;
+                switch (move.TargetSquare) {
+                    case 62: // black kingside
+                        rookOffset += -2;
+                        rookLocation = 63;
+                        break;
+                    case 52: // black queenside
+                        rookOffset += 3;
+                        rookLocation = 56;
+                        break;
+                    case 2: // white queenside
+                        rookOffset += 3;
+                        rookLocation = 0;
+                        break;
+                    case 6: // white kingside
+                        rookOffset += -2;
+                        rookLocation = 7;
+                        break;
+                    default:
+                        throw new InvalidDataException();
+                }
+
+                // move king
+                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
+                gameboard[move.StartSquare] = 0;
+
+                // move rook
+                gameboard[rookOffset + rookLocation] = gameboard[rookLocation];
+                gameboard[rookLocation] = 0;
+            } else { // traditional move
+                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
+                gameboard[move.StartSquare] = 0;
             }
 
-            // Handle Castle here. TODO
-
             // Commit the move
-            gameboard[move.TargetSquare] = gameboard[move.StartSquare];
-            gameboard[move.StartSquare] = 0;
+            
 
             // also, if enpassant capture flag move, remove the pawn @ gamestate.enpassantsquare.
             // Make the move

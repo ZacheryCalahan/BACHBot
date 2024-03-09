@@ -1,4 +1,6 @@
-﻿namespace caZsChessBot.Engine {
+﻿using System.ComponentModel;
+
+namespace caZsChessBot.Engine {
     public static class MoveGeneration {
         // Ranks and Files for computation (double ply around board for sake of knights, single ply for everything else.)
         static readonly int[] rankA = { 0, 8, 16, 24, 32, 40, 48, 56 };
@@ -9,6 +11,9 @@
         static readonly int[] file7 = { 48, 49, 50, 51, 52, 53, 54, 55 };
         static readonly int[] file2 = { 8, 9, 10, 11, 12, 13, 14, 15 };
         static readonly int[] file1 = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+        // This is for getting the king moves. (castling in specific).
+        static ulong attackedBitboard;
 
         public static List<Move> GenerateLegalMoves(Board board) {
             List<Move> processedMoves = GeneratePsuedoLegalMoves(board);
@@ -21,10 +26,12 @@
         }
 
         public static List<Move> GeneratePsuedoLegalMoves(Board board) {
+            attackedBitboard = 0; // reset the attacked bitboard.
             List<Move> psuedoLegalMoves = new List<Move>();
             
             int colorToMove = board.WhiteToMove ? Piece.White : Piece.Black;
             int currentPiece = 0;
+            int kingLocation = -1; // set to -1, but this is arbitrary. a king for each color should always be on the board.
 
             for (int i = 0; i < 64; i++) { // Loop through each piece on the board.
                 currentPiece = board.GetPiece(i);
@@ -41,9 +48,22 @@
                         psuedoLegalMoves.AddRange(GeneratePawnMoves(board, i));
                     } else {
                         psuedoLegalMoves.AddRange(GenerateKingMoves(board, i));
+                        kingLocation = i;
                     }
                 }
             }
+
+            // Castling has to be handled seperately, since castling requires no attacks on castle squares.
+            // Generate attacked squares.
+            ulong opponentAttacks = OpponentAttackedSquares(board);
+
+            if (kingLocation != -1) { // if king location is equal to -1, then no king was found.
+                psuedoLegalMoves.AddRange(GenerateKingCastleMoves(board, kingLocation, opponentAttacks));
+            } else {
+                Console.WriteLine("No king on the board.");
+            }
+            
+
             return psuedoLegalMoves;
         }
 
@@ -114,6 +134,7 @@
                         break;
                     }
                 }
+                offsetLocation = location;
             } 
             
             if (Piece.IsDiagonalPiece(currentPiece)) {
@@ -168,7 +189,7 @@
                 // down left
                 while (!rankA.Contains(offsetLocation) && !rankA.Contains(location) &&
                        !file1.Contains(offsetLocation) && !file1.Contains(location)) {
-                    offsetLocation += 9;
+                    offsetLocation += -9;
                     int pieceAtLocation = board.GetPiece(offsetLocation);
                     // Only add piece if target square is empty or contains opponent piece.
                     if (pieceAtLocation == 0) {
@@ -186,11 +207,10 @@
         }
 
         private static List<Move> GenerateKingMoves(Board board, int location) {
-            // TODO CASTLING!!!
-            
             // Handle the psuedo move generation (does not account for checks, we'll do all that in the search/eval).
             List<Move> kingMoves = new List<Move>();
             int currentPiece = board.GetPiece(location);
+            int colorToMove = Piece.GetPieceColor(currentPiece);
             int offsetLocation = location;
             int pieceAtLocation;
 
@@ -224,7 +244,56 @@
                     kingMoves.Add(new Move(location, offsetLocation));
                 }
             }
+
             return kingMoves;
+        }
+
+        private static List<Move> GenerateKingCastleMoves(Board board, int location, ulong attackedBitboard) {
+            List<Move> castleMoves = new List<Move>();
+            int currentPiece = board.GetPiece(location);
+            int colorToMove = Piece.GetPieceColor(currentPiece);
+            bool castlingKingside = board.CurrentGameState.HasKingsideCastleRight(colorToMove == Piece.White);
+            bool castlingQueenside = board.CurrentGameState.HasQueensideCastleRight(colorToMove == Piece.White);
+            ulong castleSquaresMask;
+            // Handle castling TODO
+            if (castlingKingside) {
+                if (colorToMove == Piece.White) {
+                    castleSquaresMask = 96; // check bit 5 and 6
+                    // If no attacks on castle squares, AND no pieces in between, add move.
+                    if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
+                        if (board.GetPiece(5) == 0 && board.GetPiece(6) == 0) {
+                            castleMoves.Add(new Move(location, location + 2, Move.CastleFlag));
+                        }
+                    }
+                } else {
+                    castleSquaresMask = 6917529027641081856; // check bit 61 and 62
+                    if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
+                        if (board.GetPiece(61) == 0 && board.GetPiece(62) == 0) {
+                            castleMoves.Add(new Move(location, location + 2, Move.CastleFlag));
+                        }
+                    }
+                }
+            }
+
+            if (castlingQueenside) {
+                if (colorToMove == Piece.White) {
+                    castleSquaresMask = 14; // check bit 1, 2, and 3
+                    if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
+                        if (board.GetPiece(1) == 0 && board.GetPiece(2) == 0 && board.GetPiece(3) == 0) {
+                            castleMoves.Add(new Move(location, location - 2, Move.CastleFlag));
+                        }
+                    }
+                } else {
+                    castleSquaresMask = 1008806316530991104; // check bit 57, 58, and 59
+                    if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
+                        if (board.GetPiece(57) == 0 && board.GetPiece(58) == 0 && board.GetPiece(59) == 0) {
+                            castleMoves.Add(new Move(location, location - 2, Move.CastleFlag));
+                        }
+                    }
+                }
+            }
+
+            return castleMoves;
         }
 
         private static List<Move> GeneratePawnMoves(Board board, int location) {
@@ -264,7 +333,7 @@
             if (!rankA.Contains(location)) {
                 offsets.Add(7);
                 offsets.Add(-9);
-            } else if (!rankH.Contains(location)) {
+            } if (!rankH.Contains(location)) {
                 offsets.Add(9);
                 offsets.Add(-7);
             }
@@ -292,11 +361,11 @@
                         pawnMoves.Add(new Move(location, targetSquare, Move.PromoteToQueenFlag | Move.PieceCapturedFlag));
                     } else {
                         pawnMoves.Add(new Move(location, targetSquare, Move.PieceCapturedFlag));
-                    }
+                    } 
                 }
             }
 
-            // Enpassant
+            // Enpassant (no need to add this to attacking bitboard, because one can't castle even close to an enpassant capture.)
             offsets = new List<int>();
             if (!rankA.Contains(location)) {
                 offsets.Add(-1);
@@ -362,7 +431,67 @@
                     }
                 }
             }
+
             return knightMoves;
+        }
+
+        private static ulong OpponentAttackedSquares(Board board) {
+            ulong attackedBitboard = 0ul;
+            List<Move> attackedMoves = new List<Move>();
+            int colorToMove = board.WhiteToMove ? Piece.Black : Piece.White;
+            int currentPiece = 0;
+
+            for (int i = 0; i < 64; i++) { // Loop through each piece on the board.
+                currentPiece = board.GetPiece(i);
+                bool isWhite = Piece.IsWhite(currentPiece);
+
+                // Piece must be color to move.
+                if (currentPiece != 0 && Piece.GetPieceColor(currentPiece) == colorToMove) {
+                    int pieceType = Piece.GetPieceType(currentPiece);
+
+                    if (Piece.IsSlidingPiece(currentPiece)) {
+                        attackedMoves.AddRange(GenerateSlidingMoves(board, i));
+                    } else if (pieceType == Piece.Knight) {
+                        attackedMoves.AddRange(GenerateKnightMoves(board, i));
+                    } else if (pieceType == Piece.Pawn) {
+                        // Attacking
+                        List<int> offsets = new List<int>(); 
+                                                             
+                        if (!rankA.Contains(i)) {
+                            offsets.Add(7);
+                            offsets.Add(-9);
+                        } if (!rankH.Contains(i)) {
+                            offsets.Add(9);
+                            offsets.Add(-7);
+                        }
+                        // Prune offsets depending on forward direction.
+                        if (isWhite) {
+                            offsets.Remove(-9);
+                            offsets.Remove(-7);
+                        } else {
+                            offsets.Remove(9);
+                            offsets.Remove(7);
+                        }
+
+                        foreach (int offset in offsets) {
+                            int targetSquare = i + offset;
+                            // if our piece is the not same color piece as piece on target, add attack
+                            if (Piece.GetPieceColor(currentPiece) != Piece.GetPieceColor(board.GetPiece(targetSquare))) {
+                                attackedBitboard |= (1ul << targetSquare);
+                            }
+                        }
+                    } else {
+                        attackedMoves.AddRange(GenerateKingMoves(board, i));
+                    }
+                }
+            }
+
+            foreach (Move move in  attackedMoves) {
+                attackedBitboard |= (1ul << move.TargetSquare);
+            }
+
+            Console.WriteLine(attackedBitboard); // debug
+            return attackedBitboard;
         }
     }
 }
