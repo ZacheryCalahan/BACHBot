@@ -42,7 +42,7 @@
             bool whiteQueenCastleRight = fenTokens[2].Contains("Q");
             bool blackKingCastleRight = fenTokens[2].Contains("k");
             bool blackQueenCastleRight = fenTokens[2].Contains("q");
-            int enPassantTargetSquare = fenTokens[3] != "-" ? Board.GetSquareCoordFromName(fenTokens[3]) : -1; // Returns -1 for no enpassant
+            int enPassantTargetSquare = fenTokens[3] != "-" ? BoardUtils.GetSquareCoordFromName(fenTokens[3]) : -1; // Returns -1 for no enpassant
             int halfMoveCounter = int.Parse(fenTokens[4]);
             int fullMoveCounter = int.Parse(fenTokens[5]);
 

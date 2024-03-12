@@ -5,9 +5,10 @@
 public class EngineUCI {
 
     private EngineMain engine = new EngineMain();
+    
 
     public EngineUCI() {
-
+        
     }
     /// <summary>
     /// Take in command, and parse the data to perform an action.
@@ -71,6 +72,10 @@ public class EngineUCI {
         // Also good log point!!!
     }
 
+    public static void RespondMove(string message) {
+        Console.WriteLine(message);
+    }
+
     /// <summary>
     /// Handles the UCI command's arguments for the position command, and sets the bots <see cref="Board"/> as the command requests
     /// </summary>
@@ -81,13 +86,45 @@ public class EngineUCI {
         } else if (message.ToLower().Contains("fen")) {
             engine.SetupPosition(GetFullFen(message));
         }
+        string movestring;
+        bool parsed = GetMoves(message, out movestring);
+        if (parsed) {
+            string[] moves = movestring.Split(' ');
+            foreach (string move in moves) {
+                engine.MakeMoveUCI(move);
+            }
+        } else if (movestring != "none") {
+            Program.SendDebugInfo("Moves are invalid.");
+        }
     }
+
     /// <summary>
     /// Handles the UCI command's arguments for the go command, and lets the <see cref="Bot"/> take action.
     /// </summary>
     /// <param name="message"></param>
     private void ProcessGoCommand(string message) {
+        engine.AIMove(); // basic, but works :D
+    }
 
+    
+
+    /// <summary>
+    /// Method that extracts the moves from a position command
+    /// </summary>
+    /// <param name="message">The command sent to UCI</param>
+    /// <param name="moves">The result containing a string of moves.</param>
+    /// <returns>A <see cref="bool"/> if moves were found and parsed.</returns>
+    private bool GetMoves(string message, out string moves) {
+        message = message.Trim();
+        if (message.IndexOf("moves") == -1) { // no moves detected.
+            moves = "none";
+            return false;
+        }
+
+        int valueStart = message.IndexOf("moves") + "moves".Length; // get the position of the end of moves command
+        int valueEnd = message.Length;
+        moves = message.Substring(valueStart, valueEnd - valueStart).Trim();
+        return true;
     }
 
     private string GetFullFen(string message) {

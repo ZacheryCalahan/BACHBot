@@ -4,7 +4,11 @@ public static class TestUtils {
     
     public static void Test(Board board) {
         string message = "";
-        Console.WriteLine("TEST MENU\nAvailable commands:\n\tgetpiece {0-63}\n\tmovepiece startsquare targetsquare {0-63}");
+        Console.WriteLine("TEST MENU\nAvailable commands:" +
+                          "\n\tgetpiece {0-63}" +
+                          "\n\tmovepiece startsquare targetsquare {0-63}" +
+                          "\n\tverifymoves move {uci format}" +
+                          "\n\texit");
 
         while (message != "exit") {
             message = Console.ReadLine();
@@ -18,6 +22,27 @@ public static class TestUtils {
                 case "movepiece":
                     MovePieceCastle(board, messageTokens[1], messageTokens[2]);
                     break;
+                case "verifymoves":
+                    string move = messageTokens[1];
+                    VerifyMakeMove(board, MoveUtil.GetMoveFromUCIName(move, board));
+                    break;
+                case "perft":
+                    bool parsed;
+                    int depth = 0;
+                    try {
+                        parsed = int.TryParse(messageTokens[1], out depth);
+                    } catch (IndexOutOfRangeException e) {
+                        Program.SendDebugInfo("No depth provided.", true);
+                        parsed = false;
+                    }
+                    
+                    if (!parsed) {
+                        Program.SendDebugInfo("Error, depth is invalid. ", true);
+                    } else {
+                        PerftUtils.GetPerftResults(board, depth);
+                    }
+                    break;
+                        
                 default:
                     Console.WriteLine("Invalid command: " + messageTokens[0]);
                     break;
@@ -45,5 +70,30 @@ public static class TestUtils {
         } else {
             Console.WriteLine(Piece.GetPieceLetter(board.GetPiece(value)));
         }
+    }
+
+    private static void VerifyMakeMove(Board board, Move move) {
+        int[] prevBoard = board.gameboard;
+        Board prevBoardObj = board;
+        GameState prevGameState = board.CurrentGameState;
+        board.MakeMove(move);
+        board.UnMakeMove(move);
+        if (prevBoard == board.gameboard) {
+            if (GameState.IsEqual(board.CurrentGameState, prevGameState)) { // Equal board and gamestate
+                Program.SendDebugInfo("Make/Unmake move is successful.");
+            } else { // Equal board and unequal gamestate
+                Program.SendDebugInfo("Board is positionally equal, but gamestate is different.", true);
+                Program.SendDebugInfo("old: " + prevGameState.ToString(), true);
+                Program.SendDebugInfo("new: " + board.CurrentGameState.ToString(), true);
+                Program.SendDebugInfo("Move info: " + move.ToString(), true);
+            }
+        } else { // Unequal board and untested gamestate.
+            Program.SendDebugInfo("Board is not positionally equal.", true);
+            Program.SendDebugInfo("old: ", true);
+            BoardUtils.PrintDiagram(prevBoardObj);
+            Program.SendDebugInfo("new: ", true);
+            BoardUtils.PrintDiagram(board);
+        }
+        
     }
 }

@@ -3,6 +3,7 @@
     /// <summary>Class <c>Piece</c> holds helper utilities and definitions of game pieces. See class <seealso cref="Board"/> for usage.</summary>
     public static class Piece {
         // Piece Type
+        public const int None = 0;
         public const int Pawn = 1;      // Special movement
         public const int Knight = 2;    // Special movement
         public const int King = 3;      // Diag & Orth
@@ -157,6 +158,8 @@
                 return White;
         }
         public static bool IsNull(int piece) { return piece == 0; }
+
+        public static int MakePiece(int pieceType, int pieceColor) { return pieceType | pieceColor; }
     }
 
     

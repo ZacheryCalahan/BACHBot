@@ -9,6 +9,7 @@
         public readonly int enPassantSquare;
         public readonly int castlingRights;
         public readonly int fiftyMoveCounter;
+        public readonly int capturedPieceType;
 
         public const int WhiteKingsideFlag = 0b0001;
         public const int WhiteQueensideFlag = 0b0010;
@@ -20,10 +21,11 @@
         public const int ClearBlackKingsideMask = 0b1011;
         public const int ClearBlackQueensideMask = 0b0111;
 
-        public GameState(int enPassantSquare, int castlingRights, int fiftyMoveCounter) {
+        public GameState(int enPassantSquare, int castlingRights, int fiftyMoveCounter, int capturedPieceType) {
             this.enPassantSquare = enPassantSquare;
             this.castlingRights = castlingRights;
             this.fiftyMoveCounter = fiftyMoveCounter;
+            this.capturedPieceType = capturedPieceType;
         }
 
         /// <summary>
@@ -44,5 +46,23 @@
             int mask = white ? 2 : 8;
             return (castlingRights & mask) != 0;
         }
+
+        override public string ToString() {
+            return "enPassantSquare= " + enPassantSquare + ", " +
+                   "castlingRights= " + castlingRights + ", " +
+                   "fiftyMoveCounter= " + fiftyMoveCounter + ", " +
+                   "capturedPieceType= " + capturedPieceType;
+        }
+
+        // Static helpers
+
+        public static bool IsEqual(GameState a, GameState b) {
+            return a.enPassantSquare == b.enPassantSquare &&
+                   a.castlingRights == b.castlingRights &&
+                   a.fiftyMoveCounter == b.fiftyMoveCounter &&
+                   a.capturedPieceType == b.capturedPieceType;
+        }
+
+        
     }
 }

@@ -12,25 +12,30 @@ namespace caZsChessBot.Engine {
         static readonly int[] file2 = { 8, 9, 10, 11, 12, 13, 14, 15 };
         static readonly int[] file1 = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
-        // This is for getting the king moves. (castling in specific).
-        static ulong attackedBitboard;
 
         public static List<Move> GenerateLegalMoves(Board board) {
-            List<Move> processedMoves = GeneratePsuedoLegalMoves(board);
+            List<Move> psuedoLegalMoves = GeneratePsuedoLegalMoves(board);
+            List<Move> legalMoves = new List<Move>();
 
-            foreach (Move move in processedMoves) {
-                // requires a move to be made on the board.
+            foreach (Move moveToVerify in psuedoLegalMoves) {
+                board.MakeMove(moveToVerify);
+                List<Move> opponentResponses = GeneratePsuedoLegalMoves(board);
+
+                if (opponentResponses.Any (response => Piece.GetPieceType(board.GetPiece(response.TargetSquare)) == Piece.King)) {
+                    // Illegal move.
+                } else {
+                    legalMoves.Add(moveToVerify);
+                }
             }
 
-            return processedMoves;
+            return legalMoves;
         }
 
         public static List<Move> GeneratePsuedoLegalMoves(Board board) {
-            attackedBitboard = 0; // reset the attacked bitboard.
             List<Move> psuedoLegalMoves = new List<Move>();
             
             int colorToMove = board.WhiteToMove ? Piece.White : Piece.Black;
-            int currentPiece = 0;
+            int currentPiece;
             int kingLocation = -1; // set to -1, but this is arbitrary. a king for each color should always be on the board.
 
             for (int i = 0; i < 64; i++) { // Loop through each piece on the board.
@@ -60,7 +65,7 @@ namespace caZsChessBot.Engine {
             if (kingLocation != -1) { // if king location is equal to -1, then no king was found.
                 psuedoLegalMoves.AddRange(GenerateKingCastleMoves(board, kingLocation, opponentAttacks));
             } else {
-                Console.WriteLine("No king on the board.");
+                Program.SendDebugInfo("No king on the board.");
             }
             
 
@@ -297,6 +302,7 @@ namespace caZsChessBot.Engine {
         }
 
         private static List<Move> GeneratePawnMoves(Board board, int location) {
+            
             List<Move> pawnMoves = new List<Move>();
             int currentPiece = board.GetPiece(location);
             bool isWhite = Piece.IsWhite(currentPiece);
@@ -322,7 +328,8 @@ namespace caZsChessBot.Engine {
             // Double push
             targetSquare += offset;
             int[] noMoveLocations = isWhite ? file2 : file7;
-            if ((noMoveLocations.Contains(location)) && (board.GetPiece(targetSquare) == 0)) {
+            if ((noMoveLocations.Contains(location)) && 
+                (board.GetPiece(targetSquare) == 0) && (board.GetPiece(targetSquare - (isWhite ? -8 : 8)) == 0)) {
                 // Run if on the correct file for your color, and target is empty.
                 pawnMoves.Add(new Move(location, targetSquare, Move.PawnDoublePush));
             }
@@ -337,7 +344,7 @@ namespace caZsChessBot.Engine {
                 offsets.Add(9);
                 offsets.Add(-7);
             }
-            // Prune offsets depending on forward direction.
+            // Prune offsets depending on forward direction. (pawns can't move backwards.)
             if (isWhite) {
                 offsets.Remove(-9);
                 offsets.Remove(-7);
@@ -490,7 +497,6 @@ namespace caZsChessBot.Engine {
                 attackedBitboard |= (1ul << move.TargetSquare);
             }
 
-            Console.WriteLine(attackedBitboard); // debug
             return attackedBitboard;
         }
     }
