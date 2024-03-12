@@ -1,4 +1,6 @@
-﻿namespace caZsChessBot.Engine {
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace caZsChessBot.Engine {
     public static class MoveUtil {
         public static Move GetMoveFromUCIName(string moveName, Board board) {
             int startSquare = BoardUtils.GetSquareCoordFromName(moveName.Substring(0, 2));
@@ -35,5 +37,15 @@
 
             return new Move(startSquare, targetSquare, moveFlag);
         }
+
+        public static bool IsMoveLegal(Move move, Board board) {
+            List<Move> legalMoves = MoveGeneration.GenerateLegalMoves(board);
+            return legalMoves.Contains(move);
+        }
+
+        public static bool IsMoveLegal(string move, Board board) {
+            return IsMoveLegal(GetMoveFromUCIName(move, board), board);
+        }
     }
+
 }

@@ -1,13 +1,16 @@
 ﻿namespace caZsChessBot.Engine {
-    public static class PerftUtils {
-        public static void GetPerftResults(Board board, int depthToSearch) {
-            int numPositions = PerftTest(board, depthToSearch);
-            Program.SendDebugInfo(numPositions + " positions found.");
+    public class PerftUtils {
+        public void GetPerftResults(Board board, int depthToSearch) {
+            //numPositions = 0;
+            //Program.SendDebugInfo(PerftTest(board, depthToSearch) + " positions found.");
+            PerftTestDivide(board, depthToSearch);
         }
         
-        private static int PerftTest(Board board, int depth) {
-            if (depth == 0)
+        private int PerftTest(Board board, int depth) {
+            if (depth == 0) {
                 return 1;
+            }
+                
             List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
             int numPositions = 0;
             foreach (Move move in moves) {
@@ -16,6 +19,24 @@
                 board.UnMakeMove(move);
             }
             return numPositions;
+        }
+
+        private void PerftTestDivide(Board board, int depth) {
+            if (depth == 0) {
+                Program.SendDebugInfo("Depth 0 returns 1 move.", true);
+                return;
+            }
+            int totalMoves = 0;
+            List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
+
+            foreach (Move move in moves) {
+                board.MakeMove(move);
+                int movesCounted = PerftTest(board, depth - 1);
+                Program.SendDebugInfo(move.ToString().Substring(0,4) + ": " + movesCounted);
+                board.UnMakeMove(move);
+                totalMoves += movesCounted;
+            }
+            Program.SendDebugInfo("Nodes searched: " + totalMoves.ToString());
         }
     }
 }

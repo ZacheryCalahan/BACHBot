@@ -13,7 +13,9 @@ namespace caZsChessBot.Engine {
         static readonly int[] file1 = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
 
-        public static List<Move> GenerateLegalMoves(Board board) {
+        public static List<Move> GenerateLegalMoves(Board board) { 
+            // Obviously this is wildly inefficient, but for the sake of making sure I can even code the rest, this abomination stays. nothing more permanent than a temp fix huh.
+            Board prevBoard = board;
             List<Move> psuedoLegalMoves = GeneratePsuedoLegalMoves(board);
             List<Move> legalMoves = new List<Move>();
 
@@ -26,7 +28,10 @@ namespace caZsChessBot.Engine {
                 } else {
                     legalMoves.Add(moveToVerify);
                 }
+                board.UnMakeMove(moveToVerify);
             }
+
+            VerifyBoardIntegrity(prevBoard, board);
 
             return legalMoves;
         }
@@ -329,7 +334,7 @@ namespace caZsChessBot.Engine {
             targetSquare += offset;
             int[] noMoveLocations = isWhite ? file2 : file7;
             if ((noMoveLocations.Contains(location)) && 
-                (board.GetPiece(targetSquare) == 0) && (board.GetPiece(targetSquare - (isWhite ? -8 : 8)) == 0)) {
+                (board.GetPiece(targetSquare) == 0) && (board.GetPiece(targetSquare - (isWhite ? 8 : -8)) == 0)) {
                 // Run if on the correct file for your color, and target is empty.
                 pawnMoves.Add(new Move(location, targetSquare, Move.PawnDoublePush));
             }
@@ -385,7 +390,6 @@ namespace caZsChessBot.Engine {
                 if (board.CurrentGameState.enPassantSquare == attackingSquare && 
                     board.CurrentGameState.enPassantSquare != -1) {
                     // piece can only be double pushed pawn of opposing color.
-                    Console.WriteLine("Checking for enpassant capture on: " + attackingSquare);
                     targetSquare = attackingSquare + (isWhite ? 8 : -8);
                     pawnMoves.Add(new Move(location, targetSquare, Move.EnPassantCaptureFlag));
                 }
@@ -498,6 +502,20 @@ namespace caZsChessBot.Engine {
             }
 
             return attackedBitboard;
+        }
+
+        private static void VerifyBoardIntegrity(Board startBoard, Board endBoard) {
+            if (Board.IsEqual(startBoard, endBoard)) {
+                return;
+            } else {
+                Program.SendDebugInfo("Board malformed while generating moves. Original board:", true);
+                BoardUtils.PrintDiagram(startBoard);
+                BoardUtils.PrintMoves(startBoard);
+                Program.SendDebugInfo("Board after move generation:", true);
+                BoardUtils.PrintDiagram(endBoard);
+                BoardUtils.PrintMoves(endBoard);
+                throw new BoardException("Board malformity.", startBoard);
+            }
         }
     }
 }

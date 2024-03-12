@@ -5,10 +5,13 @@ public static class TestUtils {
     public static void Test(Board board) {
         string message = "";
         Console.WriteLine("TEST MENU\nAvailable commands:" +
-                          "\n\tgetpiece {0-63}" +
-                          "\n\tmovepiece startsquare targetsquare {0-63}" +
-                          "\n\tverifymoves move {uci format}" +
-                          "\n\texit");
+                          "\n\texit (Leave test menu)" +
+                          "\n\tgetpiece {squarenum} (Get the piece id on a square)" +
+                          "\n\tverifymoves {uciname} ... (Verify that moves can be made/unmade with given moves.)" +
+                          "\n\tperft {depth} (Run Perft test with given depth on current board" +
+                          "\n\tislegalmove {movename} (Check if a given move is legal.)"
+
+                          );
 
         while (message != "exit") {
             message = Console.ReadLine();
@@ -19,14 +22,15 @@ public static class TestUtils {
                 case "getpiece":
                     GetPieceOnBoard(board, messageTokens[1]); 
                     break;
-                case "movepiece":
-                    MovePieceCastle(board, messageTokens[1], messageTokens[2]);
-                    break;
                 case "verifymoves":
-                    string move = messageTokens[1];
-                    VerifyMakeMove(board, MoveUtil.GetMoveFromUCIName(move, board));
+                    string movesString = message.Substring(11).Trim();
+                    string[] moves = movesString.Split(" ");
+                    foreach (string move in moves) {
+                        VerifyMakeMove(board, MoveUtil.GetMoveFromUCIName(move, board));
+                    }
                     break;
                 case "perft":
+                    PerftUtils perft = new PerftUtils();
                     bool parsed;
                     int depth = 0;
                     try {
@@ -39,10 +43,16 @@ public static class TestUtils {
                     if (!parsed) {
                         Program.SendDebugInfo("Error, depth is invalid. ", true);
                     } else {
-                        PerftUtils.GetPerftResults(board, depth);
+                        perft.GetPerftResults(board, depth);
                     }
                     break;
-                        
+                case "islegalmove":
+                    if (MoveUtil.IsMoveLegal(messageTokens[1], board)) {
+                        Program.SendDebugInfo(messageTokens[1] + " is legal.");
+                    } else {
+                        Program.SendDebugInfo(messageTokens[1] + " is illegal.");
+                    }
+                    break;
                 default:
                     Console.WriteLine("Invalid command: " + messageTokens[0]);
                     break;

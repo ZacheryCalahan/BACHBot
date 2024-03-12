@@ -18,13 +18,13 @@
             gameStateHistory = new Stack<GameState>();
         }
 
+        
+
         public void MakeMove(Move move) {
             // Useful values
             int pieceMoved = gameboard[move.StartSquare];
             int location = move.StartSquare;
             int colorMoved = Piece.GetPieceColor(pieceMoved);
-
-            // Piece
             int pieceCaptured = 0;
             
             // Set En Passant Square to where a pawn moved to if move was double push pawn.
@@ -66,7 +66,7 @@
                         rookLocation = 7;
                         break;
                     default:
-                        throw new InvalidDataException();
+                        throw new BoardException("Invalid attempt at castling.", this);
                 }
 
                 // move king
@@ -192,6 +192,10 @@
             //CurrentGameState = gameStateHistory.Peek();
         }
 
+        public void PassTurn() {
+            WhiteToMove = !WhiteToMove;
+        }
+
         void MovePiece(int piece, int startSquare, int targetSquare) {
             gameboard[startSquare] = Piece.None;
             gameboard[targetSquare] = piece;
@@ -248,6 +252,13 @@
         /// </summary>
         /// <param name="coord">The location on the board.</param>
         /// <returns>A <see cref="string"/> representing a board square.</returns>
+        
+        public static bool IsEqual(Board a, Board b) {
+            return a.gameboard == b.gameboard &&
+                   GameState.IsEqual(a.CurrentGameState, b.CurrentGameState) &&
+                   a.WhiteToMove == b.WhiteToMove &&
+                   a.gameStateHistory == b.gameStateHistory;
+        }
 
 
 

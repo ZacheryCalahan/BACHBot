@@ -57,7 +57,7 @@
         }
 
         override public string ToString() {
-            string moveString = BoardUtils.GetSquareNameFromCoord(StartSquare) + " " +
+            string moveString = BoardUtils.GetSquareNameFromCoord(StartSquare) +
                    BoardUtils.GetSquareNameFromCoord(TargetSquare);
 
             // if promotion
