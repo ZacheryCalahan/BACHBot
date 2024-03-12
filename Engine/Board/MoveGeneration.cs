@@ -294,7 +294,7 @@ namespace caZsChessBot.Engine {
                         }
                     }
                 } else {
-                    castleSquaresMask = 1008806316530991104; // check bit 57, 58, and 59
+                    castleSquaresMask = 864691128455135232; // check bit 57, 58, and 59
                     if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
                         if (board.GetPiece(57) == 0 && board.GetPiece(58) == 0 && board.GetPiece(59) == 0) {
                             castleMoves.Add(new Move(location, location - 2, Move.CastleFlag));
@@ -319,7 +319,7 @@ namespace caZsChessBot.Engine {
             if (board.GetPiece(targetSquare) == 0) {
                 if (file1.Contains(targetSquare) || file8.Contains(targetSquare)) {
                     // Promote! (we assume white can't move backwards. if you're here wondering why white promoted
-                    // on file 1, that an issue somewhere else in the move generation.
+                    // on file 1, that an issue somewhere else in the move generation. (update lmao guess who had this issue <<<)
                     pawnMoves.Add(new Move(location, targetSquare, Move.PromoteToBishopFlag));
                     pawnMoves.Add(new Move(location, targetSquare, Move.PromoteToKnightFlag));
                     pawnMoves.Add(new Move(location, targetSquare, Move.PromoteToRookFlag));

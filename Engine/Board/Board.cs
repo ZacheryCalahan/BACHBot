@@ -13,6 +13,9 @@
         public int MoveColor => WhiteToMove ? Piece.White : Piece.Black;
         public int OpponentColor => WhiteToMove ? Piece.Black : Piece.White;
 
+        // Tools for debugging
+        Move lastMoveMade;
+
         public Board() {
             gameboard = new int[64];
             gameStateHistory = new Stack<GameState>();
@@ -21,6 +24,9 @@
         
 
         public void MakeMove(Move move) {
+            // For debugging
+            lastMoveMade = move;
+
             // Useful values
             int pieceMoved = gameboard[move.StartSquare];
             int location = move.StartSquare;
@@ -48,25 +54,29 @@
             } else if (move.MoveFlag == Move.CastleFlag) { // Castle
                 int rookOffset = 0;
                 int rookLocation = 0;
-                switch (move.TargetSquare) {
-                    case 62: // black kingside
-                        rookOffset += -2;
-                        rookLocation = 63;
-                        break;
-                    case 52: // black queenside
-                        rookOffset += 3;
-                        rookLocation = 56;
-                        break;
-                    case 2: // white queenside
+                int pieceColor = Piece.GetPieceColor(pieceMoved);
+                int direction = move.StartSquare - move.TargetSquare;
+                
+                if (pieceColor == Piece.White) {
+                    if (direction > 0) {
+                        // white queenside
                         rookOffset += 3;
                         rookLocation = 0;
-                        break;
-                    case 6: // white kingside
+                    } else {
+                        // white kingside
                         rookOffset += -2;
                         rookLocation = 7;
-                        break;
-                    default:
-                        throw new BoardException("Invalid attempt at castling.", this);
+                    }
+                } else {
+                    if (direction > 0) {
+                        // black queenside
+                        rookOffset += 3;
+                        rookLocation = 56;
+                    } else {
+                        // black kingside
+                        rookOffset += -2;
+                        rookLocation = 63;
+                    }
                 }
 
                 // move king

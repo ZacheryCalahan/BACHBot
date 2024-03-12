@@ -128,15 +128,21 @@ public class EngineUCI {
     }
 
     private string GetFullFen(string message) {
-        // Kinda dirty, but effective.
-        string[] messageTokens = message.Split(" ");
-        string fen = messageTokens[2]; // fen position
-        fen += " " + messageTokens[3] + " " +
-            messageTokens[4] + " " +
-            messageTokens[5] + " " +
-            messageTokens[6] + " " +
-            messageTokens[7];
-        return fen;
+        try {
+            // Kinda dirty, but effective.
+            string[] messageTokens = message.Split(" ");
+            string fen = messageTokens[2]; // fen position
+            fen += " " + messageTokens[3] + " " +
+                messageTokens[4] + " " +
+                messageTokens[5] + " " +
+                messageTokens[6] + " " +
+                messageTokens[7];
+            return fen;
+        } catch (IndexOutOfRangeException e) {
+            Program.SendDebugInfo("The given fen position was invalid. Setting to startpos.", true);
+            return FenUtils.startPosFen;
+        }
+        
     }
 }
 

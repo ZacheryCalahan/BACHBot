@@ -8,12 +8,8 @@
         }
 
         public void ThinkTimed(Board board) {
-            List<Move> LegalMoves = MoveGeneration.GenerateLegalMoves(board);
-            Program.SendDebugInfo("Thinking...");
-
-            Random rand = new();
-            int randomInt = rand.Next(LegalMoves.Count);
-            OnSearchComplete(LegalMoves[randomInt]);
+            Move bestMove = Search.GetBestMove(board, 6);
+            OnSearchComplete(bestMove);
         }
 
         void OnSearchComplete(Move move) {

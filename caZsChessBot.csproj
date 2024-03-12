@@ -19,8 +19,4 @@
     <None Remove="README.md" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Engine\Bot\" />
-  </ItemGroup>
-
 </Project>

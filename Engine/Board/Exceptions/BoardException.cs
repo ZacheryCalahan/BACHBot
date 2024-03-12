@@ -9,7 +9,12 @@ namespace caZsChessBot.Engine {
         public BoardException(string message, Board board): base(message) {
             Program.SendDebugInfo("Error caught. " + message, true);
             BoardUtils.PrintDiagram(board);
-            
+        }
+
+        public BoardException(string message, Board board, Move move): base(message) {
+            Program.SendDebugInfo("Error caught. " + message, true);
+            BoardUtils.PrintDiagram(board);
+            Program.SendDebugInfo("Error on Move: " + move.ToString(), true);
         }
     }
 }
