@@ -16,5 +16,9 @@ namespace caZsChessBot.Engine {
             BoardUtils.PrintDiagram(board);
             Program.SendDebugInfo("Error on Move: " + move.ToString(), true);
         }
+
+        public BoardException(string message) {
+            Program.SendDebugInfo(message, true);
+        }
     }
 }

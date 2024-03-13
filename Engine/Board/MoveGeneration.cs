@@ -287,14 +287,14 @@ namespace caZsChessBot.Engine {
 
             if (castlingQueenside) {
                 if (colorToMove == Piece.White) {
-                    castleSquaresMask = 14; // check bit 1, 2, and 3
+                    castleSquaresMask = 14; // check bit 2, and 3
                     if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
                         if (board.GetPiece(1) == 0 && board.GetPiece(2) == 0 && board.GetPiece(3) == 0) {
                             castleMoves.Add(new Move(location, location - 2, Move.CastleFlag));
                         }
                     }
                 } else {
-                    castleSquaresMask = 864691128455135232; // check bit 57, 58, and 59
+                    castleSquaresMask = 864691128455135232; // check bit 58, and 59
                     if (BitboardUtils.IsSquaresAttacked(attackedBitboard, castleSquaresMask)) {
                         if (board.GetPiece(57) == 0 && board.GetPiece(58) == 0 && board.GetPiece(59) == 0) {
                             castleMoves.Add(new Move(location, location - 2, Move.CastleFlag));
