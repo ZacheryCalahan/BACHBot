@@ -1,4 +1,6 @@
-﻿namespace caZsChessBot.Engine {
+﻿using System.Diagnostics;
+
+namespace caZsChessBot.Engine {
     public class Bot {
         // Choose move
         public event Action<string>? OnMoveChosen;

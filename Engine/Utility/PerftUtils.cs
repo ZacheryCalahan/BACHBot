@@ -1,9 +1,11 @@
 ﻿namespace caZsChessBot.Engine {
     public class PerftUtils {
         public void GetPerftResults(Board board, int depthToSearch) {
-            //numPositions = 0;
-            //Program.SendDebugInfo(PerftTest(board, depthToSearch) + " positions found.");
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
             PerftTestDivide(board, depthToSearch);
+            Program.SendDebugInfo("Time searched: " + stopwatch.ElapsedMilliseconds + "ms.");
+            stopwatch.Stop();
         }
         
         private int PerftTest(Board board, int depth) {

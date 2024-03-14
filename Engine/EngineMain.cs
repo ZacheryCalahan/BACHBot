@@ -3,7 +3,7 @@
     /// Container class that manages the game, the AI, and the board.
     /// </summary>
     public class EngineMain {
-        private Board board;
+        public Board board { get; private set; }
         private Bot ai;
 
         public EngineMain() {

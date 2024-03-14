@@ -138,7 +138,7 @@ public class EngineUCI {
                 messageTokens[6] + " " +
                 messageTokens[7];
             return fen;
-        } catch (IndexOutOfRangeException e) {
+        } catch (IndexOutOfRangeException) {
             Program.SendDebugInfo("The given fen position was invalid. Setting to startpos.", true);
             return FenUtils.startPosFen;
         }
