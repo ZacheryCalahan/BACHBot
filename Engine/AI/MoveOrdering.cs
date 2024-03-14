@@ -32,7 +32,6 @@
                 moveScores[i] = score;
             }
             return SortMoves(moves, moveScores);
-
         }
 
         static List<Move> SortMoves(List<Move> moves, int[] moveScores) {

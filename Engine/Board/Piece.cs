@@ -15,9 +15,6 @@
         public const int White = 8;
         public const int Black = 16;
 
-        // Flags
-        public const int Moved = 32; // Used for king and rooks in determining castling rights.
-
         // Bit Masks
         public const int PieceTypeMask = 7; // 0b00111
         public const int ColorMask = 24; // 0b11000
@@ -151,14 +148,29 @@
         /// <param name="piece2"></param>
         /// <returns>A <see cref="bool"/> representing the piece color equality.</returns>
         public static bool IsColor(int piece1, int piece2) { return (GetPieceColor(piece1) == GetPieceColor(piece2)); }
+        /// <summary>
+        /// Get the opponent color of a given piece.
+        /// </summary>
+        /// <param name="piece">The piece to get the opponent color from.</param>
+        /// <returns>Piece's opponent color.</returns>
         public static int GetOpponentColor(int piece) {
             if (GetPieceColor(piece) == White)
                 return Black;
             else
                 return White;
         }
-        public static bool IsNull(int piece) { return piece == 0; }
-
+        /// <summary>
+        /// Checks if a given piece has a piece type.
+        /// </summary>
+        /// <param name="piece">The piece to check</param>
+        /// <returns>If a given piece has a corresponding piece type.</returns>
+        public static bool IsPiece(int piece) { return (piece & 7) == 0; }
+        /// <summary>
+        /// Creates a new piece.
+        /// </summary>
+        /// <param name="pieceType">The type of piece to generate.</param>
+        /// <param name="pieceColor">The color of the piece to generate.</param>
+        /// <returns></returns>
         public static int MakePiece(int pieceType, int pieceColor) { return pieceType | pieceColor; }
     }
 

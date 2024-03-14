@@ -12,10 +12,6 @@ namespace caZsChessBot {
             engine.CreateNewGame();
         }
 
-        ~EngineNormal() {
-
-        }
-
         public void RecieveCommand(string message) {
 
             message = message.Trim();

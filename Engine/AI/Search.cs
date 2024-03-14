@@ -19,7 +19,7 @@
                 return Evaluate.GetEvaluation(board);
             }
 
-            List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
+            List<Move> moves = MoveGeneration.GenerateMoves(board);
             if (depth == initDepth) {
                 // this seems weird, but it's my start game strat ig.
                 Random random = new Random();

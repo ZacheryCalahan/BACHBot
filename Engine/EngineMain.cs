@@ -7,15 +7,16 @@
         private Bot ai;
 
         public EngineMain() {
-            
+            board = new Board();
+            ai = new Bot();
+            ai.OnMoveChosen += OnMoveChosen;
         }
 
         /// <summary>
         /// Initialize the engine. 
         /// </summary>
         public void InitEngine() {
-            ai = new Bot();
-            ai.OnMoveChosen += OnMoveChosen;
+            
         }
 
         /// <summary>
@@ -25,9 +26,13 @@
             board = new Board();
         }
 
+        /// <summary>
+        /// Perform search and make move.
+        /// </summary>
         public void AIMove() {
             ai.ThinkTimed(board);
         }
+
         public void OnMoveChosen(string move) {
             EngineUCI.RespondMove("bestmove " + move);
         }
@@ -44,7 +49,7 @@
             board.MakeMove(MoveUtil.GetMoveFromUCIName(move, board));
         }
 
-        // Debug.
+        // Debug stuff, as the lowest call the nonstatic board has is here.
         public void PrintDiagram() {
             BoardUtils.PrintDiagram(board);
         }

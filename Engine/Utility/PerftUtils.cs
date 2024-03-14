@@ -13,7 +13,7 @@
                 return 1;
             }
                 
-            List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
+            List<Move> moves = MoveGeneration.GenerateMoves(board);
             int numPositions = 0;
             foreach (Move move in moves) {
                 board.MakeMove(move);
@@ -29,7 +29,7 @@
                 return;
             }
             int totalMoves = 0;
-            List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
+            List<Move> moves = MoveGeneration.GenerateMoves(board);
 
             foreach (Move move in moves) {
                 board.MakeMove(move);

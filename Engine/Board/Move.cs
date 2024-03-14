@@ -2,7 +2,7 @@
     public readonly struct Move {
         readonly ushort moveValue;
 
-        // Flags
+        // Flags (non-bitflag. Can only set one of these flags at once)
         public const int NoFlag = 0;
         public const int EnPassantCaptureFlag = 1;
         public const int CastleFlag = 2;

@@ -29,7 +29,7 @@
         }
 
         public static void PrintMoves(Board board) {
-            List<Move> moves = MoveGeneration.GeneratePsuedoLegalMoves(board);
+            List<Move> moves = MoveGeneration.GenerateMoves(board);
             if (moves.Count == 0) {
                 Console.WriteLine("No moves found.");
                 return;

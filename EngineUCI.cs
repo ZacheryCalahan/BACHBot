@@ -5,11 +5,11 @@
 public class EngineUCI {
 
     private EngineMain engine = new EngineMain();
-    
 
     public EngineUCI() {
         
     }
+
     /// <summary>
     /// Take in command, and parse the data to perform an action.
     /// </summary>

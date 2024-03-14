@@ -1,5 +1,6 @@
 ﻿namespace caZsChessBot.Engine {
-    public static class FenUtils {
+    public static class FenUtils { 
+
         public const string startPosFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         /// <summary>
@@ -47,7 +48,11 @@
             int fullMoveCounter = int.Parse(fenTokens[5]);
 
             // Write gamestate
-            board.SetGameStateFromFen(whiteToMove, whiteKingCastleRight, whiteQueenCastleRight, blackKingCastleRight, blackQueenCastleRight, enPassantTargetSquare, halfMoveCounter, fullMoveCounter);
+            board.SetGameStateFromFen(); // TODO
+        }
+
+        public readonly struct PositionInfo {
+
         }
     }
 }

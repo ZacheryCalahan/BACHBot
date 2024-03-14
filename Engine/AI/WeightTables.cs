@@ -1,6 +1,6 @@
 ﻿namespace caZsChessBot.Engine {
     public readonly struct WeightTables {
-        // store all weights in white perspective, and just invert the board for black. (Borrowed values from Sebastian Lague.)
+        // store all weights in white perspective, and just invert the board for black. (Borrowed values and some implementation from Sebastian Lague.)
 
         public WeightTables() {
 

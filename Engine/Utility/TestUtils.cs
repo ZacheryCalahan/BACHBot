@@ -1,5 +1,7 @@
 ﻿using caZsChessBot.Engine;
-
+/// <summary>
+/// Helper class that can be called within the UCI Interface. To be depreciated after full CLI implementation.
+/// </summary>
 public static class TestUtils {
     
     public static void Test(Board board) {
@@ -35,7 +37,7 @@ public static class TestUtils {
                     int depth = 0;
                     try {
                         parsed = int.TryParse(messageTokens[1], out depth);
-                    } catch (IndexOutOfRangeException e) {
+                    } catch (IndexOutOfRangeException) {
                         Program.SendDebugInfo("No depth provided.", true);
                         parsed = false;
                     }
