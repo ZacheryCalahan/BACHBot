@@ -15,11 +15,62 @@
         public const int White = 8;
         public const int Black = 16;
 
+        // Pieces
+        public const int WhitePawn = Pawn | White;
+        public const int WhiteKnight = Knight | White;
+        public const int WhiteKing = King | White;
+        public const int WhiteBishop = Bishop | White;
+        public const int WhiteRook = Rook | White;
+        public const int WhiteQueen = Queen | White;
+        
+        public const int BlackPawn = Pawn | Black;
+        public const int BlackKnight = Knight | Black;
+        public const int BlackKing = King | Black;
+        public const int BlackBishop = Bishop | Black;
+        public const int BlackRook = Rook | Black;
+        public const int BlackQueen = Queen | Black;
+
         // Bit Masks
         public const int PieceTypeMask = 7; // 0b00111
         public const int ColorMask = 24; // 0b11000
 
-        // Methods
+        /// <summary>
+        /// Find the index of a piece for a given PieceList.
+        /// </summary>
+        /// <param name="piece">Piece to get index of</param>
+        /// <returns>Index of a piece</returns>
+        public static int GetPieceIndex(int piece) {
+            int colorOffset = IsWhite(piece) ? 0 : 6;
+            int index = 0;
+            piece = GetPieceType(piece);
+            switch (piece) {
+                case Pawn:
+                    index = 0;
+                    break;
+                case Knight:
+                    index = 1;
+                    break;
+                case Bishop: 
+                    index = 2;
+                    break;
+                case Rook:
+                    index = 3;
+                    break;
+                case Queen: 
+                    index = 4;
+                    break;
+                case King:
+                    index = 5;
+                    break;
+                default:
+                    return -1;
+                    break;
+            }
+            return index + colorOffset;
+        }
+
+        public const int MaxPieceIndex = 12;
+
         /// <summary>
         /// Gets the piece, stripped of its color.
         /// </summary>
