@@ -38,7 +38,6 @@ namespace caZsChessBot.Engine {
 
         public static List<Move> GeneratePsuedoLegalMoves(Board board) {
             List<Move> psuedoLegalMoves = new List<Move>();
-            
             int colorToMove = board.WhiteToMove ? Piece.White : Piece.Black;
             int currentPiece;
             int kingLocation = -1; // set to -1, but this is arbitrary. a king for each color should always be on the board.

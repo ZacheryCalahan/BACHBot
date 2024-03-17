@@ -1,4 +1,7 @@
-﻿namespace caZsChessBot.Engine {
+﻿using caZsChessBot.Engine;
+using System.Net.NetworkInformation;
+
+namespace caZsChessBot.Engine {
 
     /// <summary>Class <c>Piece</c> holds helper utilities and definitions of game pieces. See class <seealso cref="Board"/> for usage.</summary>
     public static class Piece {
@@ -12,15 +15,34 @@
         public const int Queen = 6;     // Diag & Orth Slider
 
         // Color
-        public const int White = 8;
-        public const int Black = 16;
+        public const int White = 0;
+        public const int Black = 8;
 
-        // Flags
-        public const int Moved = 32; // Used for king and rooks in determining castling rights.
+        // Pieces
+        public const int WhitePawn = Pawn | White; 
+        public const int WhiteKnight = Knight | White;
+        public const int WhiteKing = King | White;
+        public const int WhiteBishop = Bishop | White;
+        public const int WhiteRook = Rook | White;
+        public const int WhiteQueen = Queen | White; 
+        
+        public const int BlackPawn = Pawn | Black; 
+        public const int BlackKnight = Knight | Black;
+        public const int BlackKing = King | Black;
+        public const int BlackBishop = Bishop | Black; 
+        public const int BlackRook = Rook | Black; 
+        public const int BlackQueen = Queen | Black;
 
+        public const int MaxPieceIndex = BlackQueen;
+
+        public static readonly int[] PieceIndices = {
+            WhitePawn, WhiteKnight, WhiteKing, WhiteBishop, WhiteRook, WhiteQueen,
+            BlackPawn, BlackKnight, BlackKing, BlackBishop, BlackRook, BlackQueen
+        };
+        
         // Bit Masks
-        public const int PieceTypeMask = 7; // 0b00111
-        public const int ColorMask = 24; // 0b11000
+        public const int PieceTypeMask = 0b0111; // 0b00111
+        public const int ColorMask = 0b1000; // 0b1000
 
         // Methods
         /// <summary>
@@ -28,24 +50,31 @@
         /// </summary>
         /// <param name="piece"></param>
         /// <returns>An <see cref="int"/> representing the piece type.</returns>
-        public static int GetPieceType(int piece) { return piece & PieceTypeMask; }
+        public static int GetPieceType(int piece) => piece & PieceTypeMask;
         /// <summary>
         /// Checks if <c>piece</c> is of type <c>pieceType</c>.
         /// </summary>
         /// <param name="piece">Piece to compare</param>
         /// <param name="pieceType">Piece type to compare to</param>
-        public static bool IsPieceType(int piece, int pieceType) { return (GetPieceType(piece) & pieceType) == pieceType ? true : false; }
+        public static bool IsPieceType(int piece, int pieceType) => (GetPieceType(piece) & pieceType) == pieceType ? true : false;
         /// <summary>
         /// Get the color of <c>piece</c>.
         /// </summary>
         /// <param name="piece"></param>
         /// <returns>An <see cref="int"/> representing the color of <c>piece</c>.</returns>
-        public static int GetPieceColor(int piece) { return piece & ColorMask; } // Admitedly redundant, but may make code easier to read later.
+        public static int GetPieceColor(int piece) => piece & ColorMask;
         /// <summary>
         /// Check if <c>piece</c> is of color <see cref="White"/>.
         /// </summary>
         /// <param name="piece"></param>
-        public static bool IsWhite(int piece) {  return (piece & White) == White ? true : false; }
+        public static bool IsWhite(int piece) => IsColor(piece, White);
+        /// <summary>
+        /// Check if two pieces are of the same color.
+        /// </summary>
+        /// <param name="piece">The piece</param>
+        /// <param name="color">The color to check against</param>
+        /// <returns>A <see cref="bool"/> representing the piece color equality.</returns>
+        public static bool IsColor(int piece, int color) => (piece & ColorMask) == color && piece != 0;
         /// <summary>
         /// Check if <c>piece</c> is capable of moving more than one space at a time in any straight direction.
         /// </summary>
@@ -144,13 +173,6 @@
 
             return piece;
         }
-        /// <summary>
-        /// Check if two pieces are of the same color.
-        /// </summary>
-        /// <param name="piece1"></param>
-        /// <param name="piece2"></param>
-        /// <returns>A <see cref="bool"/> representing the piece color equality.</returns>
-        public static bool IsColor(int piece1, int piece2) { return (GetPieceColor(piece1) == GetPieceColor(piece2)); }
         public static int GetOpponentColor(int piece) {
             if (GetPieceColor(piece) == White)
                 return Black;
@@ -159,7 +181,7 @@
         }
         public static bool IsNull(int piece) { return piece == 0; }
 
-        public static int MakePiece(int pieceType, int pieceColor) { return pieceType | pieceColor; }
+        public static int MakePiece(int pieceType, int pieceColor) => pieceType | pieceColor;
     }
 
     

@@ -37,7 +37,7 @@
         /// </summary>
         /// <param name="fenString">The FEN to setup</param>
         public void SetupPosition(string fenString = FenUtils.startPosFen) {
-            FenUtils.SetupBoardFromFen(board, fenString);
+            board.LoadFenPosition(fenString);
         }
 
         public void MakeMoveUCI(string move) { // TODO fix enpassant captures

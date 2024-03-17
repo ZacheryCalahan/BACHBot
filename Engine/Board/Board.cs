@@ -3,29 +3,34 @@
     /// This Class holds the internal representation of the chess board.
     /// </summary>
     public class Board {
-        // Game board
-        public int[] gameboard { get; private set; }
-
-        // Gamestate stuff.
-        public GameState CurrentGameState;
-        public bool WhiteToMove { get; private set; }
-        private Stack<GameState> gameStateHistory;
+        // Public
+        public int WhiteIndex = 0;
+        public int BlackIndex = 1;
         public int MoveColor => WhiteToMove ? Piece.White : Piece.Black;
         public int OpponentColor => WhiteToMove ? Piece.Black : Piece.White;
+        public int MoveColorIndex => WhiteToMove ? WhiteIndex : BlackIndex;
+        public int OpponentColorIndex => WhiteToMove ? BlackIndex : WhiteIndex;
 
-        // Tools for debugging
-        Move lastMoveMade;
+        public int[] gameboard { get; private set; }
+        public bool WhiteToMove { get; private set; }
+        public GameState CurrentGameState;
+        public PieceList[] Pawns;
+        public PieceList[] Knights;
+        public PieceList[] Bishops;
+        public PieceList[] Rooks;
+        public PieceList[] Queens;
+        public int[] KingSquare;
+
+        // Private
+        private Stack<GameState> gameStateHistory;
+        PieceList[] allPieceLists;
 
         public Board() {
             gameboard = new int[64];
             gameStateHistory = new Stack<GameState>();
         }
 
-        
-
         public void MakeMove(Move move) {
-            // For debugging
-            lastMoveMade = move;
 
             // Useful values
             int pieceMoved = gameboard[move.StartSquare];
@@ -234,35 +239,81 @@
             if (location >= 0 && location < 64) {
                 gameboard[location] = piece;
             } else {
-                throw new InvalidDataException();
+                throw new BoardException("Invalid board coordinate: " + location + ".", this);
             }
         }
 
-        public void SetGameStateFromFen(bool whiteToMove, bool whiteKingCastleRight, bool whiteQueenCastleRight,
-            bool blackKingCastleRight, bool blackQueenCastleRight, int enPassantTargetSquare, int halfMoveCounter, int fullMoveCounter) {
-            WhiteToMove = whiteToMove;
-            int castleRights =
-                (whiteKingCastleRight ? GameState.WhiteKingsideFlag : 0) |
-                (whiteQueenCastleRight ? GameState.WhiteQueensideFlag : 0) |
-                (blackKingCastleRight ? GameState.BlackKingsideFlag : 0) |
-                (blackQueenCastleRight ? GameState.BlackQueensideFlag : 0);
 
-            gameStateHistory = new Stack<GameState>(); // clear gamestate.
-            CurrentGameState = new GameState(enPassantTargetSquare, castleRights, halfMoveCounter, 0);
+        public void LoadFenPosition(string fen) {
+            FenUtils.PositionInfo positionInfo = FenUtils.SetupBoardFromFen(fen);
+            LoadFenPosition(positionInfo);
+        }
+
+        public void LoadFenPosition(FenUtils.PositionInfo positionInfo) {
+            Initialize();
+
+            // Gameboard
+            for (int i = 0; i < 64; i++) {
+                int piece = positionInfo.squares[i];
+                int colorIndex = Piece.IsWhite(piece) ? WhiteIndex : BlackIndex;
+                int pieceType = Piece.GetPieceType(piece);
+
+                gameboard[i] = piece;
+
+                if (piece != Piece.None) {
+                    if (pieceType == Piece.King) {
+                        KingSquare[colorIndex] = i;
+                    } else {
+                        allPieceLists[piece].AddPieceAtSquare(i);
+                    }
+                }
+            }
+
+            // Gamestate
+            WhiteToMove = positionInfo.whiteToMove;
+            int whiteCastle = ((positionInfo.whiteCastleKingside) ? 1 << 0 : 0) | ((positionInfo.whiteCastleQueenside) ? 1 << 1 : 0);
+            int blackCastle = ((positionInfo.blackCastleKingside) ? 1 << 2 : 0) | ((positionInfo.blackCastleQueenside) ? 1 << 3 : 0);
+            int castlingRights = whiteCastle | blackCastle;
+
+            // Plycount here, don't need it at the moment though.
+            CurrentGameState = new GameState(positionInfo.enPassantSquare, castlingRights, positionInfo.fiftyMoveCounter, 0);
             gameStateHistory.Push(CurrentGameState);
         }
 
+        public void Initialize() {
+            KingSquare = new int[2];
+            Array.Clear(gameboard);
+
+            gameStateHistory = new Stack<GameState>(capacity: 64);
+            CurrentGameState = new GameState();
+
+            Knights = new PieceList[] { new PieceList(10), new PieceList(10) };
+            Pawns = new PieceList[] { new PieceList(8), new PieceList(8) };
+            Rooks = new PieceList[] { new PieceList(10), new PieceList(10) };
+            Bishops = new PieceList[] { new PieceList(10), new PieceList(10) };
+            Queens = new PieceList[] { new PieceList(9), new PieceList(9) };
+
+            allPieceLists = new PieceList[Piece.MaxPieceIndex + 1];
+            allPieceLists[Piece.WhitePawn] = Pawns[WhiteIndex];
+            allPieceLists[Piece.WhiteKnight] = Knights[WhiteIndex];
+            allPieceLists[Piece.WhiteBishop] = Bishops[WhiteIndex];
+            allPieceLists[Piece.WhiteRook] = Rooks[WhiteIndex];
+            allPieceLists[Piece.WhiteQueen] = Queens[WhiteIndex];
+            allPieceLists[Piece.WhiteKing] = new PieceList(1);
+
+            allPieceLists[Piece.BlackPawn] = Pawns[BlackIndex];
+            allPieceLists[Piece.BlackKnight] = Knights[BlackIndex];
+            allPieceLists[Piece.BlackBishop] = Bishops[BlackIndex];
+            allPieceLists[Piece.BlackRook] = Rooks[BlackIndex];
+            allPieceLists[Piece.BlackQueen] = Queens[BlackIndex];
+            allPieceLists[Piece.BlackKing] = new PieceList(1);
+        }
 
         public override string ToString() {
             return BoardUtils.GetDiagram(this);
         }
-        // Static helpers.
-        /// <summary>
-        /// Gets the name of a square from an integer.
-        /// </summary>
-        /// <param name="coord">The location on the board.</param>
-        /// <returns>A <see cref="string"/> representing a board square.</returns>
-        
+
+        // Static Helpers
         public static bool IsEqual(Board a, Board b) {
             return a.gameboard == b.gameboard &&
                    GameState.IsEqual(a.CurrentGameState, b.CurrentGameState) &&
