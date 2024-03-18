@@ -36,43 +36,44 @@ namespace caZsChessBot.Engine {
             return legalMoves;
         }
 
-        public static List<Move> GeneratePsuedoLegalMoves(Board board) {
+        public static List<Move> GeneratePsuedoLegalMoves(Board board) { // IMPLEMENT CHECKS BY PIECE LIST!!!
             List<Move> psuedoLegalMoves = new List<Move>();
             int colorToMove = board.WhiteToMove ? Piece.White : Piece.Black;
-            int currentPiece;
-            int kingLocation = -1; // set to -1, but this is arbitrary. a king for each color should always be on the board.
+            int colorIndex = board.MoveColorIndex;
+            int kingLocation = board.KingSquare[colorIndex];
 
-            for (int i = 0; i < 64; i++) { // Loop through each piece on the board.
-                currentPiece = board.GetPiece(i);
-                
-                // Piece must be color to move.
-                if (currentPiece != 0 && Piece.GetPieceColor(currentPiece) == colorToMove) {
-                    int pieceType = Piece.GetPieceType(currentPiece);
-
-                    if (Piece.IsSlidingPiece(currentPiece)) {
-                        psuedoLegalMoves.AddRange(GenerateSlidingMoves(board, i));
-                    } else if (pieceType == Piece.Knight) {
-                        psuedoLegalMoves.AddRange(GenerateKnightMoves(board, i));
-                    } else if (pieceType == Piece.Pawn) {
-                        psuedoLegalMoves.AddRange(GeneratePawnMoves(board, i));
-                    } else {
-                        psuedoLegalMoves.AddRange(GenerateKingMoves(board, i));
-                        kingLocation = i;
-                    }
-                }
+            PieceList pawns = board.Pawns[colorIndex];
+            for (int i = 0; i < pawns.Count; i++) {
+                psuedoLegalMoves.AddRange(GeneratePawnMoves(board, pawns[i]));
             }
-
+            PieceList knights = board.Knights[colorIndex];
+            for (int i = 0; i < knights.Count; i++) {
+                psuedoLegalMoves.AddRange(GenerateKnightMoves(board, knights[i]));
+            }
+            PieceList bishops = board.Bishops[colorIndex];
+            for (int i = 0; i < bishops.Count; i++) {
+                psuedoLegalMoves.AddRange(GenerateSlidingMoves(board, bishops[i]));
+            }
+            PieceList rooks = board.Rooks[colorIndex];
+            for (int i = 0; i < rooks.Count; i++) {
+                psuedoLegalMoves.AddRange(GenerateSlidingMoves(board, rooks[i]));
+            }
+            PieceList queens = board.Queens[colorIndex];
+            for (int i = 0; i < queens.Count; i++) {
+                psuedoLegalMoves.AddRange(GenerateSlidingMoves(board, queens[i]));
+            }
+            
             // Castling has to be handled seperately, since castling requires no attacks on castle squares.
             // Generate attacked squares.
             ulong opponentAttacks = OpponentAttackedSquares(board);
 
             if (kingLocation != -1) { // if king location is equal to -1, then no king was found.
+                psuedoLegalMoves.AddRange(GenerateKingMoves(board, kingLocation));
                 psuedoLegalMoves.AddRange(GenerateKingCastleMoves(board, kingLocation, opponentAttacks));
             } else {
                 Program.SendDebugInfo("No king on the board.");
             }
             
-
             return psuedoLegalMoves;
         }
 

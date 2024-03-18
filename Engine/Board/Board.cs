@@ -2,7 +2,7 @@
     /// <summary>
     /// This Class holds the internal representation of the chess board.
     /// </summary>
-    public class Board {
+    public sealed class Board {
         // Public
         public int WhiteIndex = 0;
         public int BlackIndex = 1;
@@ -20,191 +20,181 @@
         public PieceList[] Rooks;
         public PieceList[] Queens;
         public int[] KingSquare;
+        public PieceList[] allPieceLists;
 
         // Private
         private Stack<GameState> gameStateHistory;
-        PieceList[] allPieceLists;
-
+        
         public Board() {
             gameboard = new int[64];
             gameStateHistory = new Stack<GameState>();
         }
 
         public void MakeMove(Move move) {
+            // Info about the move
+            int moveFrom = move.StartSquare;
+            int moveTo = move.TargetSquare;
+            int capturedPieceType = Piece.GetPieceType(gameboard[moveTo]);
+            int movedPiece = gameboard[moveFrom];
+            int movedPieceType = Piece.GetPieceType(movedPiece);
+            bool isPromotion = move.IsPromotion;
+            bool isEnPassant = move.MoveFlag == Move.EnPassantCaptureFlag;
 
-            // Useful values
-            int pieceMoved = gameboard[move.StartSquare];
-            int location = move.StartSquare;
-            int colorMoved = Piece.GetPieceColor(pieceMoved);
-            int pieceCaptured = 0;
-            
-            // Set En Passant Square to where a pawn moved to if move was double push pawn.
-            int newEnPassantSquare = (move.MoveFlag == Move.PawnDoublePush) ? move.TargetSquare : -1;
-
-            // Calculate 50 move counter.
-            int newFiftyMoveCounter;
-            if (Piece.GetPieceType(pieceMoved) == Piece.Pawn || move.IsPieceCaptured) {
-                newFiftyMoveCounter = 1;
-            } else {
-                newFiftyMoveCounter = CurrentGameState.fiftyMoveCounter + 1;
-            }
-
-            // Move pieces
-            if (move.IsEnpassantCapture) { // Enpassant
-                pieceCaptured = gameboard[CurrentGameState.enPassantSquare];
-                gameboard[CurrentGameState.enPassantSquare] = 0; // Remove enpassant pawn
-
-                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
-                gameboard[move.StartSquare] = 0;
-            } else if (move.MoveFlag == Move.CastleFlag) { // Castle
-                int rookOffset = 0;
-                int rookLocation = 0;
-                int pieceColor = Piece.GetPieceColor(pieceMoved);
-                int direction = move.StartSquare - move.TargetSquare;
-                
-                if (pieceColor == Piece.White) {
-                    if (direction > 0) {
-                        // white queenside
-                        rookOffset += 3;
-                        rookLocation = 0;
-                    } else {
-                        // white kingside
-                        rookOffset += -2;
-                        rookLocation = 7;
-                    }
-                } else {
-                    if (direction > 0) {
-                        // black queenside
-                        rookOffset += 3;
-                        rookLocation = 56;
-                    } else {
-                        // black kingside
-                        rookOffset += -2;
-                        rookLocation = 63;
-                    }
-                }
-
-                // move king
-                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
-                gameboard[move.StartSquare] = 0;
-
-                // move rook
-                gameboard[rookOffset + rookLocation] = gameboard[rookLocation];
-                gameboard[rookLocation] = 0;
-            } else if (move.IsPromotion) { // Promotion
-                int piecePromotedTo = 0;
-                int colorToPromote = Piece.GetPieceColor(gameboard[move.StartSquare]);
-                switch (move.PromotionPieceType) {
-                    case (Piece.Queen):
-                        piecePromotedTo = Piece.Queen | colorToPromote;
-                        break;
-                    case (Piece.Rook):
-                        piecePromotedTo = Piece.Rook | colorToPromote;
-                        break;
-                    case (Piece.Knight):
-                        piecePromotedTo = Piece.Knight | colorToPromote;
-                        break;
-                    case (Piece.Bishop):
-                        piecePromotedTo = Piece.Bishop | colorToPromote;
-                        break;
-                    default:
-                        break;
-                }
-
-                // Commit the promotion and move.
-                gameboard[move.TargetSquare] = piecePromotedTo;
-                gameboard[move.StartSquare] = 0;
-
-            } else { // Normal moves
-                pieceCaptured = gameboard[move.TargetSquare];
-                gameboard[move.TargetSquare] = gameboard[move.StartSquare];
-                gameboard[move.StartSquare] = 0;
-            }
-
+            // Gamestate variables (set to default values first, overwrite them later if necessary)
             int newCastlingRights = CurrentGameState.castlingRights;
-            // Calculate castle rights.
-            if (Piece.GetPieceType(pieceMoved) == Piece.King) {
-                if (colorMoved == Piece.White) {
-                    newCastlingRights &= GameState.ClearWhiteKingsideMask;
-                    newCastlingRights &= GameState.ClearWhiteQueensideMask;
-                } else {
-                    newCastlingRights &= GameState.ClearBlackKingsideMask;
-                    newCastlingRights &= GameState.ClearBlackQueensideMask;
+            int newEnPassantSquare = (move.MoveFlag == Move.PawnDoublePush) ? move.TargetSquare : -1;
+            int newFiftyMoveCounter = 0;
+
+            // Handle Captures
+            if (capturedPieceType != 0 && !isEnPassant) {
+                GetPieceList(capturedPieceType, OpponentColorIndex).RemovePieceAtSquare(moveTo);
+            }
+
+            // Move Pieces in PieceLists
+            if (movedPieceType == Piece.King) {
+                KingSquare[MoveColorIndex] = moveTo;
+                newCastlingRights &= (WhiteToMove) ? GameState.ClearWhiteCastle : GameState.ClearBlackCastle;
+            } else {
+                GetPieceList(movedPieceType, MoveColorIndex).MovePiece(moveFrom, moveTo);
+            }
+
+            int pieceOnTargetSquare = movedPiece;
+
+            // Handle Promotions
+            if (isPromotion) {
+                int promoteType = 0;
+                switch (move.MoveFlag) {
+                    case Move.PromoteToQueenFlag:
+                        promoteType = Piece.Queen;
+                        Queens[MoveColorIndex].AddPieceAtSquare(moveTo);
+                        break;
+                    case Move.PromoteToKnightFlag:
+                        promoteType = Piece.Knight;
+                        Knights[MoveColorIndex].AddPieceAtSquare(moveTo);
+                        break;
+                    case Move.PromoteToRookFlag:
+                        promoteType = Piece.Rook;
+                        Rooks[MoveColorIndex].AddPieceAtSquare(moveTo);
+                        break;
+                    case Move.PromoteToBishopFlag:
+                        promoteType = Piece.Bishop;
+                        Bishops[MoveColorIndex].AddPieceAtSquare(moveTo);
+                        break;
                 }
-            } else if (Piece.GetPieceType(pieceMoved) == Piece.Rook) {
-                if (colorMoved == Piece.White) {
-                    if (location == 0) {
+                pieceOnTargetSquare = promoteType | MoveColor;
+                Pawns[MoveColorIndex].RemovePieceAtSquare(moveTo);
+            } else {
+                switch (move.MoveFlag) {
+                    case Move.EnPassantCaptureFlag:
+                        int enPassantSquare = CurrentGameState.enPassantSquare;
+                        capturedPieceType = gameboard[enPassantSquare];
+                        gameboard[enPassantSquare] = 0; // Clear enpassant pawn
+                        Pawns[OpponentColorIndex].RemovePieceAtSquare(enPassantSquare);
+                        break;
+                    case Move.CastleFlag:
+                        bool kingside = moveTo == 6 || moveTo == 62; // g1 and g8
+                        int castlingRookFromIndex = (kingside) ? moveTo + 1 : moveTo - 2;
+                        int castlingRookToIndex = (kingside) ? moveTo - 1 : moveTo + 1;
+                        gameboard[castlingRookFromIndex] = Piece.None;
+                        gameboard[castlingRookToIndex] = Piece.Rook | MoveColor;
+                        Rooks[MoveColorIndex].MovePiece(castlingRookFromIndex, castlingRookToIndex);
+                        break;
+                }
+            }
+
+            // Move piece
+            gameboard[moveTo] = pieceOnTargetSquare;
+            gameboard[moveFrom] = 0;
+
+            // Calculate castle rights in the case of Rook movement
+            if (movedPieceType == Piece.Rook) {
+                if (MoveColor == Piece.White) {
+                    if (move.StartSquare == 0) {
                         newCastlingRights &= GameState.ClearWhiteQueensideMask;
-                    } else if (location == 7) {
+                    } else if (move.StartSquare == 7) {
                         newCastlingRights &= GameState.ClearWhiteKingsideMask;
                     }
                 } else {
-                    if (location == 56) {
+                    if (move.StartSquare == 56) {
                         newCastlingRights &= GameState.ClearBlackQueensideMask;
-                    } else if (location == 63) {
+                    } else if (move.StartSquare == 63) {
                         newCastlingRights &= GameState.ClearBlackKingsideMask;
                     }
                 }
             }
 
-            // Gamestate stuff
-            WhiteToMove = !WhiteToMove; // pass off turn
+            if (capturedPieceType != 0 || movedPieceType == Piece.Pawn) {
+                newFiftyMoveCounter = 0;
+            } else {
+                if (MoveColor == Piece.Black) {
+                    newFiftyMoveCounter += 1;
+                }
+            }
 
+            WhiteToMove = !WhiteToMove;
+            CurrentGameState = new GameState(newEnPassantSquare, newCastlingRights, newFiftyMoveCounter, capturedPieceType);
             gameStateHistory.Push(CurrentGameState);
-            CurrentGameState = new GameState(newEnPassantSquare, newCastlingRights, newFiftyMoveCounter, pieceCaptured);
         }
 
-        public void UnMakeMove(Move move) {
+        public void UnMakeMove(Move move) { 
             // Swap color to move
             WhiteToMove = !WhiteToMove;
             bool undoingWhiteMove = WhiteToMove;
 
-            // Move info
+            // Move Info
             int movedFrom = move.StartSquare;
             int movedTo = move.TargetSquare;
             int moveFlag = move.MoveFlag;
             bool undoingEnPassant = moveFlag == Move.EnPassantCaptureFlag;
             bool undoingPromotion = move.IsPromotion;
             bool undoingCapture = CurrentGameState.capturedPieceType != Piece.None;
-
             int movedPiece = undoingPromotion ? Piece.MakePiece(Piece.Pawn, MoveColor) : gameboard[movedTo];
             int movedPieceType = Piece.GetPieceType(movedPiece);
-            int capturedPieceType = CurrentGameState.capturedPieceType;
+            int lastCapturedPieceType = CurrentGameState.capturedPieceType;
 
             if (undoingPromotion) {
-                int promotedPiece = gameboard[movedTo];
+                int promotedPawn = gameboard[movedTo];
                 int pawnPiece = Piece.MakePiece(Piece.Pawn, MoveColor);
-                gameboard[promotedPiece] = pawnPiece; // replace promotion with pawn
+                gameboard[movedTo] = pawnPiece;
+                allPieceLists[promotedPawn].RemovePieceAtSquare(movedTo);
+                allPieceLists[movedPiece].AddPieceAtSquare(movedTo);
             }
 
             MovePiece(movedPiece, movedTo, movedFrom);
 
             if (undoingCapture) {
                 int captureSquare = movedTo;
-                int capturedPiece = Piece.MakePiece(capturedPieceType, OpponentColor);
+                int capturedPiece = Piece.MakePiece(lastCapturedPieceType, OpponentColor);
 
                 if (undoingEnPassant) {
                     captureSquare = movedTo + ((undoingWhiteMove) ? -8 : 8);
                 }
+                allPieceLists[capturedPiece].AddPieceAtSquare(captureSquare);
                 gameboard[captureSquare] = capturedPiece;
             }
 
             if (movedPieceType is Piece.King) {
+                KingSquare[MoveColorIndex] = movedFrom;
+
                 if (moveFlag is Move.CastleFlag) {
                     int rookPiece = Piece.MakePiece(Piece.Rook, MoveColor);
                     bool kingside = movedTo == 6 || movedTo == 62; // g1 and g8
-                    int rookSquareBeforeCatling = kingside ? movedTo + 1 : movedTo - 2;
+                    int rookSquareBeforeCastling = kingside ? movedTo + 1 : movedTo - 2;
                     int rookSquareAfterCastling = kingside ? movedTo - 1 : movedTo + 1;
 
-                    // Undo castle
+                    // Return rook
                     gameboard[rookSquareAfterCastling] = Piece.None;
-                    gameboard[rookSquareBeforeCatling] = rookPiece;
+                    gameboard[rookSquareBeforeCastling] = rookPiece;
+                    allPieceLists[rookPiece].MovePiece(rookSquareAfterCastling, rookSquareBeforeCastling);
                 }
             }
 
-            // return gamestate
-            CurrentGameState = gameStateHistory.Pop();
-            //CurrentGameState = gameStateHistory.Peek();
+            gameStateHistory.Pop();
+            CurrentGameState = gameStateHistory.Peek();
+        }
+
+        PieceList GetPieceList (int pieceType, int colorIndex) {
+            return allPieceLists[colorIndex * 8 + pieceType];
         }
 
         public void PassTurn() {
@@ -214,6 +204,7 @@
         void MovePiece(int piece, int startSquare, int targetSquare) {
             gameboard[startSquare] = Piece.None;
             gameboard[targetSquare] = piece;
+            GetPieceList(Piece.GetPieceType(piece), MoveColorIndex).MovePiece(startSquare, targetSquare);
         }
 
         /// <summary>

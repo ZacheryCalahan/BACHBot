@@ -19,19 +19,19 @@ namespace caZsChessBot.Engine {
         public const int Black = 8;
 
         // Pieces
-        public const int WhitePawn = Pawn | White; 
-        public const int WhiteKnight = Knight | White;
-        public const int WhiteKing = King | White;
-        public const int WhiteBishop = Bishop | White;
-        public const int WhiteRook = Rook | White;
-        public const int WhiteQueen = Queen | White; 
+        public const int WhitePawn = Pawn | White;      // 1
+        public const int WhiteKnight = Knight | White;  // 2
+        public const int WhiteKing = King | White;      // 3
+        public const int WhiteBishop = Bishop | White;  // 4
+        public const int WhiteRook = Rook | White;      // 5
+        public const int WhiteQueen = Queen | White;    // 6
         
-        public const int BlackPawn = Pawn | Black; 
-        public const int BlackKnight = Knight | Black;
-        public const int BlackKing = King | Black;
-        public const int BlackBishop = Bishop | Black; 
-        public const int BlackRook = Rook | Black; 
-        public const int BlackQueen = Queen | Black;
+        public const int BlackPawn = Pawn | Black;      // 9
+        public const int BlackKnight = Knight | Black;  // 10
+        public const int BlackKing = King | Black;      // 11
+        public const int BlackBishop = Bishop | Black;  // 12
+        public const int BlackRook = Rook | Black;      // 13
+        public const int BlackQueen = Queen | Black;    // 14
 
         public const int MaxPieceIndex = BlackQueen;
 
@@ -62,7 +62,7 @@ namespace caZsChessBot.Engine {
         /// </summary>
         /// <param name="piece"></param>
         /// <returns>An <see cref="int"/> representing the color of <c>piece</c>.</returns>
-        public static int GetPieceColor(int piece) => piece & ColorMask;
+        public static int GetPieceColor(int piece) => piece == 0 ? -1 : piece & ColorMask;
         /// <summary>
         /// Check if <c>piece</c> is of color <see cref="White"/>.
         /// </summary>
@@ -174,6 +174,8 @@ namespace caZsChessBot.Engine {
             return piece;
         }
         public static int GetOpponentColor(int piece) {
+            if (piece == 0)
+                return -1;
             if (GetPieceColor(piece) == White)
                 return Black;
             else

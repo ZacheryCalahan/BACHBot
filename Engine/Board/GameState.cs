@@ -21,6 +21,9 @@
         public const int ClearBlackKingsideMask = 0b1011;
         public const int ClearBlackQueensideMask = 0b0111;
 
+        public const int ClearWhiteCastle = 0b1100;
+        public const int ClearBlackCastle = 0b0011;
+
         public GameState(int enPassantSquare, int castlingRights, int fiftyMoveCounter, int capturedPieceType) {
             this.enPassantSquare = enPassantSquare;
             this.castlingRights = castlingRights;

@@ -35,7 +35,7 @@ public static class TestUtils {
                     int depth = 0;
                     try {
                         parsed = int.TryParse(messageTokens[1], out depth);
-                    } catch (IndexOutOfRangeException e) {
+                    } catch (IndexOutOfRangeException) {
                         Program.SendDebugInfo("No depth provided.", true);
                         parsed = false;
                     }

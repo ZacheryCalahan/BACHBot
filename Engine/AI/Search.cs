@@ -20,15 +20,13 @@
             }
 
             List<Move> moves = MoveGeneration.GenerateLegalMoves(board);
+            if (moves.Count == 0) {
+                return int.MinValue;
+            }
             if (depth == initDepth) {
                 // this seems weird, but it's my start game strat ig.
                 Random random = new Random();
                 bestMove = moves[random.Next(moves.Count - 1)];
-            }
-
-            
-            if (moves.Count == 0) { // technically tries not to draw. Will be changed later, but this may depend on bitboards and zobrist hashing.
-                return int.MinValue;
             }
 
             foreach (Move move in moves) {

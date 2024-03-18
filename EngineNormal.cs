@@ -12,10 +12,6 @@ namespace caZsChessBot {
             engine.CreateNewGame();
         }
 
-        ~EngineNormal() {
-
-        }
-
         public void RecieveCommand(string message) {
 
             message = message.Trim();
@@ -52,6 +48,10 @@ namespace caZsChessBot {
 
                 case "printmoves":
                     engine.PrintMoves();
+                    break;
+
+                case "verifypiecelists":
+
                     break;
 
                 default:
